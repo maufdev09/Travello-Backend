@@ -1,0 +1,44 @@
+
+
+
+
+model Listing {
+  id           String       @id @default(uuid())
+  title        String
+  description  String
+  itinerary    String?
+  price        Int
+  currency     String       @default("USD")
+  durationHours Int
+  meetingPoint String
+  maxGroupSize Int
+  city         String
+  category     Category     @default(CUSTOM)
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  guide   Guide   @relation(fields: [guideId], references: [id])
+  guideId String
+
+  images       ListingImage[]
+  availabilities Availability[]
+  bookings     Booking[]
+  reviews      Review[]
+
+  @@map("listings")
+}
+
+
+
+
+model ListingImage {
+  id        String   @id @default(uuid())
+  url       String
+  caption   String?
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  listingId String
+  createdAt DateTime @default(now())
+
+  @@map("listing_images")
+}

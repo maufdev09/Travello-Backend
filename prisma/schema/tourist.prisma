@@ -1,0 +1,18 @@
+model Tourist {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String
+  profilePhoto  String?
+  preferences   String?
+  contactNumber String?
+  isDeleted     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  bookings Booking[] @relation("TouristBookings")
+  reviews  Review[]
+
+  user User @relation(fields: [email], references: [email])
+
+  @@map("tourists")
+}

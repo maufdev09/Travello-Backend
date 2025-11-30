@@ -1,0 +1,42 @@
+enum UserRole {
+  TOURIST
+  GUIDE
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum Category {
+  FOOD
+  ART
+  ADVENTURE
+  HISTORY
+  NIGHTLIFE
+  SHOPPING
+  CULTURE
+  CUSTOM
+}
