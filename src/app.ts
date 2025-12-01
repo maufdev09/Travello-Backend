@@ -11,12 +11,12 @@ app.use(cors({
     credentials: true
 }));
 
-app.use("/api/v1", router);
 
 //parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use("/api/v1", router);
 
 app.get('/', (req: Request, res: Response) => {
     res.send({

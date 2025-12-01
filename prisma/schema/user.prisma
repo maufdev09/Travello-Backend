@@ -1,8 +1,9 @@
 model User {
   id                 String     @id @default(uuid())
+  name               String
   email              String     @unique
   password           String
-  role               UserRole
+  role               UserRole  @default(TOURIST)
   needPasswordChange Boolean    @default(false)
   status             UserStatus @default(ACTIVE)
   createdAt          DateTime   @default(now())
@@ -35,8 +36,8 @@ model Admin {
 
 model Guide {
   id                  String              @id @default(uuid())
-  email               String              @unique
   name                String
+  email               String              @unique
   profilePhoto        String?
   bio                 String?
   languages           String[]            @default([])
@@ -55,4 +56,24 @@ model Guide {
   user User @relation(fields: [email], references: [email])
 
   @@map("guides")
+}
+
+
+model Tourist {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String
+  profilePhoto  String?
+  preferences   String?
+  contactNumber String?
+  isDeleted     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  bookings Booking[] @relation("TouristBookings")
+  reviews  Review[]
+
+  user User @relation(fields: [email], references: [email])
+
+  @@map("tourists")
 }

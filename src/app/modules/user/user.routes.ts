@@ -1,11 +1,14 @@
-import { Router } from "express"
-import { userController } from "./user.controller"
+import { Router } from "express";
+import { userController } from "./user.controller";
+import { validateRequest } from "../../middlewares/validateRequest";
+import { createGuidezodSchema } from "./user.validation";
 
+const router = Router();
 
-const router= Router()
+router.post(
+  "/create-guide",
+  validateRequest(createGuidezodSchema),
+  userController.ctreateGuideController
+);
 
-router.post("/create-guide", userController.ctreateGuideController)
-
-
-
-export const userRoutes= router
+export const userRoutes = router;
