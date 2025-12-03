@@ -4,7 +4,6 @@ import { userService } from "./user.service";
 
 const  ctreateGuideController= catchAsync(async (req, res) => {
 
-    console.log(req.body);
     
 
 const result= await  userService.ctreateGuideService(req)
@@ -13,7 +12,7 @@ sendResponse(res, {
         statusCode: 201,
         success: true,
         message: "Guide Created successfully!",
-        data: result
+        data: result,
     })
 
 
