@@ -24,13 +24,13 @@ const login = async (payload: { email: string; password: string }) => {
 
   const accessToken = jwtHelper.generateToken(
     { email: user.email, role: user.role },
-    "accessSecret Key",
+    "abcd",
     "1h"
   );
 
   const refreshToken = jwtHelper.generateToken(
     { email: user.email, role: user.role },
-    "refreshSecret Key",
+    "abcd",
     "90d"
   );
 

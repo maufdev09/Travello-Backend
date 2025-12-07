@@ -2,11 +2,16 @@ import { Router } from "express";
 import { userController } from "./user.controller";
 import { createGuidezodSchema } from "./user.validation";
 import { fileUploader } from "../../helper/fileUploader";
+import { UserRole } from "../../../generated/prisma/client/enums";
+import auth from "../../middlewares/auth";
 
 const router = Router();
 
-router.get("/", userController.getAllUserController);
-
+router.get(
+  "/",
+  auth(UserRole.ADMIN, UserRole.GUIDE),
+  userController.getAllUserController
+);
 
 router.post(
   "/create-guide",
