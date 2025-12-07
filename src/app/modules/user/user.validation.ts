@@ -2,7 +2,7 @@ import z from "zod";
 
 export const createGuidezodSchema = z.object({
   password: z.string(),
-  guide: z.object({
+  data: z.object({
     name: z.string({
       error: "Name is required",
     }),
