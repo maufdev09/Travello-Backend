@@ -21,7 +21,7 @@ model Listing {
   guide   Guide   @relation(fields: [guideId], references: [id])
   guideId String
 
-  images       ListingImage[]
+  images      String[]
   availabilities Availability[]
   bookings     Booking[]
   reviews      Review[]
@@ -30,15 +30,3 @@ model Listing {
 }
 
 
-
-
-model ListingImage {
-  id        String   @id @default(uuid())
-  url       String
-  caption   String?
-  listing   Listing  @relation(fields: [listingId], references: [id])
-  listingId String
-  createdAt DateTime @default(now())
-
-  @@map("listing_images")
-}

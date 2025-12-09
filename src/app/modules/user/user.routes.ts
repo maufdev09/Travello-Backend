@@ -7,28 +7,20 @@ import auth from "../../middlewares/auth";
 
 const router = Router();
 
-router.get(
-  "/",
-  auth(UserRole.ADMIN, UserRole.GUIDE),
-  userController.getAllUserController
-);
+router.get("/", auth(UserRole.ADMIN), userController.getAllUserController);
 
 router.post(
   "/create-guide",
+  auth(UserRole.ADMIN),
+
   fileUploader.upload.single("file"),
+  
   (req, res, next) => {
     req.body = createGuidezodSchema.parse(JSON.parse(req.body.data));
     return userController.ctreateGuideController(req, res, next);
   }
 );
-router.post(
-  "/create-guide",
-  fileUploader.upload.single("file"),
-  (req, res, next) => {
-    req.body = createGuidezodSchema.parse(JSON.parse(req.body.data));
-    return userController.ctreateGuideController(req, res, next);
-  }
-);
+
 router.post(
   "/create-tourist",
   fileUploader.upload.single("file"),
@@ -39,6 +31,8 @@ router.post(
 );
 router.post(
   "/create-admin",
+  auth(UserRole.ADMIN),
+
   fileUploader.upload.single("file"),
   (req, res, next) => {
     req.body = createGuidezodSchema.parse(JSON.parse(req.body.data));
