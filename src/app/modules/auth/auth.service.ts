@@ -1,11 +1,10 @@
-import { log } from "console";
+import  httpStatus  from 'http-status';
 import { UserStatus } from "../../../generated/prisma/client/enums";
 import { prisma } from "../../shared/prisma";
 import bcrypt from "bcryptjs";
 
-import jwt from "jsonwebtoken";
 import { jwtHelper } from "../../helper/jwtHelper";
-import { email } from "zod";
+import ApiError from "../../errors/ApiError";
 
 const login = async (payload: { email: string; password: string }) => {
   const user = await prisma.user.findUniqueOrThrow({
@@ -19,7 +18,7 @@ const login = async (payload: { email: string; password: string }) => {
   console.log(isPasswordMatch);
 
   if (!isPasswordMatch) {
-    throw new Error("Invalid credentials");
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid credentials");
   }
 
   const accessToken = jwtHelper.generateToken(

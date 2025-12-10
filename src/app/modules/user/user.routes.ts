@@ -11,7 +11,7 @@ router.get("/", auth(UserRole.ADMIN), userController.getAllUserController);
 
 router.post(
   "/create-guide",
-  auth(UserRole.ADMIN),
+  // auth(UserRole.ADMIN),
 
   fileUploader.upload.single("file"),
   
@@ -31,7 +31,7 @@ router.post(
 );
 router.post(
   "/create-admin",
-  auth(UserRole.ADMIN),
+  // auth(UserRole.ADMIN),
 
   fileUploader.upload.single("file"),
   (req, res, next) => {

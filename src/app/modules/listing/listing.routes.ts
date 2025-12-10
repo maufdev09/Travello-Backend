@@ -4,7 +4,6 @@ import { lstingController } from "./listing.controller";
 
 const router = Router();
 
-
 router.post(
   "/create-listing/:guideId",
   fileUploader.upload.array("file", 10),
@@ -12,5 +11,8 @@ router.post(
   lstingController.ctreateListingController
 );
 
+router.get("/", lstingController.getAllListingController);
+
+router.post("/suggestion" , lstingController.getlistingSuggestion);
 
 export const listingRoutes = router;

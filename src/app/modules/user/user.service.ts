@@ -93,6 +93,8 @@ const getAllUsersService = async (params: any, options: any) => {
 
   const { searchTerm, ...filterData } = params;
   const andConditions: Prisma.UserWhereInput[] = [];
+
+  
   if (searchTerm) {
     andConditions.push({
       OR: userSearchableFields.map((field) => ({

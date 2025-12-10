@@ -1,6 +1,5 @@
 model Booking {
   id         String        @id @default(uuid())
-  date       DateTime
   guests     Int           @default(1)
   status     BookingStatus @default(PENDING)
   totalPrice Int
@@ -19,6 +18,10 @@ model Booking {
 
   payment   Payment?
   review    Review?
+
+  bookingDate  Availability @relation( fields: [bookingDateId], references: [id])
+  bookingDateId String @unique
+
 
   @@map("bookings")
 }
