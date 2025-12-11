@@ -4,7 +4,7 @@ model Payment {
   currency      String        @default("USD")
   status        PaymentStatus @default(PENDING)
   gateway       String?
-  transactionId String?
+  transactionId String? @unique
   meta          Json?
   createdAt     DateTime      @default(now())
 

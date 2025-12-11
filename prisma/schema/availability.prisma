@@ -1,13 +1,17 @@
 model Availability {
   id        String   @id @default(uuid())
   listing   Listing  @relation(fields: [listingId], references: [id])
+  guide Guide @relation(fields: [guideId], references: [id])
+  guideId   String 
   listingId String
   startAt   DateTime
   endAt     DateTime
   note      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  booked  Boolean @default(false)
+
 
   bookings   Booking?
   @@map("availabilities")
-}
+}\

@@ -2,6 +2,7 @@ model Booking {
   id         String        @id @default(uuid())
   guests     Int           @default(1)
   status     BookingStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
   totalPrice Int
   currency   String        @default("USD")
   createdAt  DateTime      @default(now())
@@ -13,15 +14,14 @@ model Booking {
   tourist   Tourist @relation("TouristBookings", fields: [touristId], references: [id])
   touristId String
 
-  guide     Guide   @relation("GuideBookings", fields: [guideId], references: [id])
-  guideId   String
+  guide   Guide  @relation("GuideBookings", fields: [guideId], references: [id])
+  guideId String
 
-  payment   Payment?
-  review    Review?
+  payment Payment?
+  review  Review?
 
-  bookingDate  Availability @relation( fields: [bookingDateId], references: [id])
-  bookingDateId String @unique
-
+  bookingDate   Availability @relation(fields: [bookingDateId], references: [id])
+  bookingDateId String       @unique
 
   @@map("bookings")
 }

@@ -28,6 +28,7 @@ enum PaymentStatus {
   PAID
   FAILED
   REFUNDED
+  CANCELLED
 }
 
 enum Category {

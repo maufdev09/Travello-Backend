@@ -48,9 +48,12 @@ model Guide {
   isDeleted           Boolean             @default(false)
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
+  
+  availabilities Availability[]
 
   listings     Listing[]
   bookings     Booking[] @relation("GuideBookings")
+
 
   user User @relation(fields: [email], references: [email])
 
@@ -65,6 +68,7 @@ model Tourist {
   profilePhoto  String?
   preferences   String?
   contactNumber String?
+  address             String?
   isDeleted     Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

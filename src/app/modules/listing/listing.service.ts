@@ -1,10 +1,12 @@
+import httpStatus from "http-status";
 import { fileUploader } from "../../helper/fileUploader";
 import { prisma } from "../../shared/prisma";
 import { Request } from "express";
-import { Prisma } from '../../../generated/prisma/client/client';
+import { Prisma } from "../../../generated/prisma/client/client";
 import calculatePagination from "../../helper/paginationHelper";
 import { listingSearchableFields } from "./listing.contsnt";
-import { log } from 'node:console';
+import ApiError from "../../errors/ApiError";
+import { openai } from "../../helper/open-Router";
 
 const createListing = async (req: Request) => {
   const guideId = req.params.guideId;
@@ -43,6 +45,8 @@ const createListing = async (req: Request) => {
           startAt: new Date(slot.startAt),
           endAt: new Date(slot.endAt),
           note: slot.note || null,
+          guide: { connect: { id: guideId } },  
+
         })),
       },
     },
@@ -108,15 +112,74 @@ const getAllListingsService = async (params: any, options: any) => {
   };
 };
 
+const getlistingSuggestion = async (payload: { suggestion: string }) => {
+  if (!(payload && payload.suggestion)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Suggestion text is required");
+  }
 
-const getlistingSuggestion=async (payload:{suggestion: string})=>{
+  const listings = await prisma.listing.findMany({
+    where: {
+      isActive: true,
+    },
+    include: {
+      guide: true,
+      availabilities: true,
+      reviews: true,
+      bookings: true,
+    },
+  });
 
-  console.log('Payload:', payload);
+  const prompt = `
+User is looking for: "${payload.suggestion}"
 
-}
+Here is the list of available tours:
 
+${JSON.stringify(listings, null, 2)}
+
+Your task:
+1. Read all listings.
+2. Compare them to the user's requested tour type.
+3. Select the TOP 5 most relevant tours.
+4. Return ONLY valid JSON in this format with full listing details
+`;
+
+  const completion = await openai.chat.completions.create({
+    model: "z-ai/glm-4.5-air:free",
+    messages: [
+      {
+        role: "system",
+        content: `You are a helpful assistant that helps users find suitable tour listings based on their preferences.`,
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+  });
+
+  const rawContent = completion.choices[0].message.content;
+
+  if (!rawContent) {
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "No response from AI");
+  }
+
+  // Remove code block formatting (```json ... ```)
+  const cleaned = rawContent
+    .replace(/^```json/, "")
+    .replace(/```$/, "")
+    .trim();
+
+  // Convert string → JSON object
+  let listingData;
+  try {
+    listingData = JSON.parse(cleaned);
+  } catch (e) {
+    console.error("JSON parse error:", e);
+  }
+  return listingData;
+};
 export const listingService = {
   createListing,
   getAllListingsService,
-  getlistingSuggestion
+  getlistingSuggestion,
 };
