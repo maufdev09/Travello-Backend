@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 
 import { jwtHelper } from "../../helper/jwtHelper";
 import ApiError from "../../errors/ApiError";
+import config from '../../../config';
 
 const login = async (payload: { email: string; password: string }) => {
   const user = await prisma.user.findUniqueOrThrow({
@@ -23,14 +24,14 @@ const login = async (payload: { email: string; password: string }) => {
 
   const accessToken = jwtHelper.generateToken(
     { email: user.email, role: user.role },
-    "abcd",
-    "1h"
+    config.jwt.secret as string,
+    config.jwt.expires_in as string
   );
 
   const refreshToken = jwtHelper.generateToken(
     { email: user.email, role: user.role },
-    "abcd",
-    "90d"
+    config.jwt.refresh_secret as string,
+    config.jwt.refresh_expires_in as string
   );
 
   return {

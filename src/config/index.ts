@@ -26,7 +26,11 @@ export default {
     success_frontend_url: process.env.SSL_SUCCESS_FRONTEND_URL,
     fail_frontend_url: process.env.SSL_FAIL_FRONTEND_URL,
     cancel_frontend_url: process.env.SSL_CANCEL_FRONTEND_URL,
-    
-
+  },
+  jwt: {
+    secret: process.env.JWT_SECRET,
+    refresh_secret: process.env.JWT_REFRESH_SECRET,
+    expires_in: process.env.JWT_EXPIRES_IN,
+    refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
   }
 };

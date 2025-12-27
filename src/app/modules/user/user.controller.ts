@@ -42,8 +42,6 @@ const getAllUserController = catchAsync(async (req, res) => {
 
   const result = await userService.getAllUsersService(filters, options);
 
-
-
   sendResponse(res, {
     statusCode: 201,
     success: true,

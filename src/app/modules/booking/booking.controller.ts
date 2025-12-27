@@ -9,7 +9,7 @@ const ctreateBookingController = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: 201,
     success: true,
-    message: "Admin Created successfully!",
+    message: "Booking created successfully!",
     data: result,
   });
 });
