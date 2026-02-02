@@ -41,6 +41,78 @@ const login = async (payload: { email: string; password: string }) => {
   };
 };
 
+const getMe = async (decodedToken: any) => {
+
+   const userData = await prisma.user.findUniqueOrThrow({
+    where: {
+      email: decodedToken.email,
+      status: UserStatus.ACTIVE,
+    },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      needPasswordChange: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+
+      admin: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          contactNumber: true,
+          isDeleted: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
+
+      guide: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          bio: true,
+          languages: true,
+          expertise: true,
+          dailyRate: true,
+          verificationStatus: true,
+          contactNumber: true,
+          address: true,
+          isDeleted: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
+
+      tourist: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          preferences: true,
+          contactNumber: true,
+          address: true,
+          isDeleted: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
+    },
+  });
+
+    return userData
+
+}
+
 export const authService = {
   login,
+  getMe
 };
+
+

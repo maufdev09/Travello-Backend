@@ -1,9 +1,11 @@
+import  httpStatus  from 'http-status';
 import { pick } from "../../helper/pick";
 import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
 import { userService } from "./user.service";
 
 const ctreateGuideController = catchAsync(async (req, res) => {
+  console.log("hello from ctreateGuideController");
   const result = await userService.ctreateGuideService(req);
 
   sendResponse(res, {
@@ -36,6 +38,8 @@ const ctreateAdminController = catchAsync(async (req, res) => {
 });
 
 const getAllUserController = catchAsync(async (req, res) => {
+
+  console.log("hello from getAllUserController");
   // page, limit, sortBy, sortOrder, fields,searchTerm
   const filters = pick(req.query, ["status", "role", "email", "searchTerm"]);
 
@@ -103,7 +107,22 @@ const getUserByIdController = catchAsync(async (req, res) => {
 
 // Get all admins
 const getAllAdminsController = catchAsync(async (req, res) => {
-  const result = await userService.getAllAdminsService(req.query, req.query);
+ const filters = pick(req.query, [
+    "searchTerm",
+    "email",
+    "contactNumber",
+    "isDeleted",
+   
+  ]);
+
+  const options = pick(req.query, [
+    "page",
+    "limit",
+    "sortBy",
+    "sortOrder",
+  ]);
+  const result = await userService.getAllAdminsService(filters, options);
+  
 
   sendResponse(res, {
     statusCode: 200,
@@ -116,7 +135,23 @@ const getAllAdminsController = catchAsync(async (req, res) => {
 
 // Get all guides
 const getAllGuidesController = catchAsync(async (req, res) => {
-  const result = await userService.getAllGuidesService(req.query, req.query);
+
+  
+
+  const filters = pick(req.query, [
+    "searchTerm",
+    "verificationStatus",
+    "email",
+    "contactNumber",
+  ]);
+
+  const options = pick(req.query, [
+    "page",
+    "limit",
+    "sortBy",
+    "sortOrder",
+  ]);
+  const result = await userService.getAllGuidesService(filters, options);
 
   sendResponse(res, {
     statusCode: 200,
@@ -129,7 +164,21 @@ const getAllGuidesController = catchAsync(async (req, res) => {
 
 // Get all tourists
 const getAllTouristsController = catchAsync(async (req, res) => {
-  const result = await userService.getAllTouristsService(req.query, req.query);
+
+const filters = pick(req.query, [
+    "searchTerm",
+    "email",
+    "contactNumber",
+  ]);
+
+  const options = pick(req.query, [
+    "page",
+    "limit",
+    "sortBy",
+    "sortOrder",
+  ]);
+
+  const result = await userService.getAllTouristsService(filters, options);
 
   sendResponse(res, {
     statusCode: 200,
@@ -199,6 +248,7 @@ const deleteTouristByIdController = catchAsync(async (req, res) => {
 // Delete Guide
 const deleteGuideByIdController = catchAsync(async (req, res) => {
   const { id } = req.params;
+  console.log(`deleteGuideByIdController`,id);
 
   const result = await userService.deleteGuideByIdService(id);
 
@@ -224,6 +274,20 @@ const deleteAdminByIdController = catchAsync(async (req, res) => {
   });
 });
 
+const updateMyProfie = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
+
+    const user = req.user;
+
+    const result = await userService.updateMyProfileService(user as IAuthUser, req);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "My profile updated!",
+        data: result
+    })
+});
+
 export const userController = {
   ctreateGuideController,
   ctreateTouristController,
@@ -242,4 +306,5 @@ export const userController = {
   deleteTouristByIdController,
   deleteGuideByIdController,
   deleteAdminByIdController,
+  updateMyProfie,
 };

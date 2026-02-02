@@ -21,7 +21,7 @@ model Listing {
   guide   Guide   @relation(fields: [guideId], references: [id])
   guideId String
 
-  images      String[]
+  images      String?
   availabilities Availability[]
   bookings     Booking[]
   reviews      Review[]

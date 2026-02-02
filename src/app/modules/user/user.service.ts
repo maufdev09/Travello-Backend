@@ -3,7 +3,7 @@ import { Request } from "express";
 import bcrypt from "bcryptjs";
 import { prisma } from "../../shared/prisma";
 import { fileUploader } from "../../helper/fileUploader";
-import { UserRole } from "../../../generated/prisma/client/enums";
+import { UserRole, UserStatus } from "../../../generated/prisma/client/enums";
 import calculatePagination from "../../helper/paginationHelper";
 import { Prisma } from "../../../generated/prisma/client/client";
 import {
@@ -285,7 +285,7 @@ const getAllGuidesService = async (params: any, options: any) => {
     take: limit,
     where: {
       AND: andConditions,
-      isDeleted: false,
+      // isDeleted: false,
     },
     orderBy: {
       [sortBy]: sortOrder,
@@ -295,7 +295,7 @@ const getAllGuidesService = async (params: any, options: any) => {
   const total = await prisma.guide.count({
     where: {
       AND: andConditions,
-      isDeleted: false,
+      // isDeleted: false,
     },
   });
 
@@ -341,7 +341,7 @@ const getAllTouristsService = async (params: any, options: any) => {
     take: limit,
     where: {
       AND: andConditions,
-      isDeleted: false,
+      // isDeleted: false,
     },
     orderBy: {
       [sortBy]: sortOrder,
@@ -351,7 +351,7 @@ const getAllTouristsService = async (params: any, options: any) => {
   const total = await prisma.tourist.count({
     where: {
       AND: andConditions,
-      isDeleted: false,
+      // isDeleted: false,
     },
   });
 
@@ -397,7 +397,7 @@ const getAllAdminsService = async (params: any, options: any) => {
     take: limit,
     where: {
       AND: andConditions,
-      isDeleted: false,
+      // isDeleted: false,
     },
     orderBy: {
       [sortBy]: sortOrder,
@@ -407,7 +407,7 @@ const getAllAdminsService = async (params: any, options: any) => {
   const total = await prisma.admin.count({
     where: {
       AND: andConditions,
-      isDeleted: false,
+      // isDeleted: false,
     },
   });
 
@@ -531,6 +531,65 @@ const deleteAdminByIdService = async (id: string) => {
 };
 
 
+
+
+const updateMyProfileService = async (
+  user:any,
+  req: Request
+) => {
+  /* ---------------------------- validate user ----------------------------- */
+  const userInfo = await prisma.user.findUnique({
+    where: {
+      email: user.email,
+      status: UserStatus.ACTIVE,
+    },
+  });
+
+  if (!userInfo) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "User not found or inactive");
+  }
+
+  /* ---------------------------- handle image ------------------------------- */
+  if (req.file) {
+    const uploadResult = await fileUploader.uloadToCloudinary(req.file);
+    req.body.profilePhoto = uploadResult?.secure_url;
+  }
+
+  /* ------------------------- role based update ----------------------------- */
+  let profile;
+
+  if (userInfo.role === UserRole.ADMIN) {
+    profile = await prisma.admin.update({
+      where: { email: userInfo.email },
+      data: req.body,
+    });
+  }
+
+  if (userInfo.role === UserRole.GUIDE) {
+    profile = await prisma.guide.update({
+      where: { email: userInfo.email },
+      data: req.body,
+    });
+  }
+
+  if (userInfo.role === UserRole.TOURIST) {
+    profile = await prisma.tourist.update({
+      where: { email: userInfo.email },
+      data: req.body,
+    });
+  }
+
+  if (!profile) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Profile update failed"
+    );
+  }
+
+  return profile;
+};
+
+
 export const userService = {
   ctreateGuideService,
   ctreateTouristService,
@@ -548,5 +607,6 @@ export const userService = {
   getGuideByIdService,
   deleteTouristByIdService,
   deleteGuideByIdService,
-  deleteAdminByIdService
+  deleteAdminByIdService,
+  updateMyProfileService
 };

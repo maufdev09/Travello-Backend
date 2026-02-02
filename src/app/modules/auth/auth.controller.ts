@@ -1,3 +1,4 @@
+import { JwtPayload } from "jsonwebtoken";
 import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
 import { authService } from "./auth.service";
@@ -33,6 +34,21 @@ const login = catchAsync(async (req, res) => {
   });
 });
 
+const getMe = catchAsync(async (req, res) => {
+  const decodedToken = req?.user as JwtPayload
+    const result = await authService.getMe(decodedToken);
+
+
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User logged in successfully",
+    data: result
+  });
+});
+
 export const authController = {
   login,
+  getMe
 };

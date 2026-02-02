@@ -1,28 +1,39 @@
-import { Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import { userController } from "./user.controller";
-import {  createGuideZodSchema, createUserZodSchema, updateAdminZodSchema, updateGuideZodSchema, updateTouristZodSchema } from "./user.validation";
+import {
+  createGuideZodSchema,
+  createUserZodSchema,
+  updateAdminZodSchema,
+  updateGuideZodSchema,
+  updateTouristZodSchema,
+} from "./user.validation";
 import { fileUploader } from "../../helper/fileUploader";
 import { UserRole } from "../../../generated/prisma/client/enums";
 import auth from "../../middlewares/auth";
 
 const router = Router();
 
-router.get("/", 
-  // auth(UserRole.ADMIN), 
-  userController.getAllUserController);
+// ================= ROOT =================
+router.get(
+  "/",
+  // auth(UserRole.ADMIN),
+  userController.getAllUserController
+);
 
+// ================= CREATE =================
+
+// Create Guide
 router.post(
   "/create-guide",
-  // auth(UserRole.ADMIN),
-
+  auth(UserRole.ADMIN),
   fileUploader.upload.single("file"),
-  
   (req, res, next) => {
     req.body = createGuideZodSchema.parse(JSON.parse(req.body.data));
     return userController.ctreateGuideController(req, res, next);
   }
 );
 
+// Create Tourist
 router.post(
   "/create-tourist",
   fileUploader.upload.single("file"),
@@ -31,10 +42,11 @@ router.post(
     return userController.ctreateTouristController(req, res, next);
   }
 );
+
+// Create Admin
 router.post(
   "/create-admin",
   // auth(UserRole.ADMIN),
-
   fileUploader.upload.single("file"),
   (req, res, next) => {
     req.body = createUserZodSchema.parse(JSON.parse(req.body.data));
@@ -42,14 +54,28 @@ router.post(
   }
 );
 
-// Get user by ID (admin only)
+// ================= GET LIST =================
+
+// Admins
 router.get(
-  "/:id",
+  "/admins",
   auth(UserRole.ADMIN),
-  userController.getUserByIdController
+  userController.getAllAdminsController
 );
 
+// Guides
+router.get(
+  "/guides",
+  // auth(UserRole.ADMIN),
+  userController.getAllGuidesController
+);
 
+// Tourists
+router.get(
+  "/tourists",
+  auth(UserRole.ADMIN),
+  userController.getAllTouristsController
+);
 
 // ================= UPDATE =================
 
@@ -83,31 +109,6 @@ router.patch(
   }
 );
 
-
-// ================= GET LIST =================
-
-// Admins (admin only)
-router.get(
-  "/admins",
-  auth(UserRole.ADMIN),
-  userController.getAllAdminsController
-);
-
-// Guides (admin only)
-router.get(
-  "/guides",
-  auth(UserRole.ADMIN),
-  userController.getAllGuidesController
-);
-
-// Tourists (admin only)
-router.get(
-  "/tourists",
-  auth(UserRole.ADMIN),
-  userController.getAllTouristsController
-);
-
-
 // ================= GET BY ID =================
 
 // Tourist by ID
@@ -130,7 +131,6 @@ router.get(
   auth(UserRole.ADMIN),
   userController.getAdminByIdController
 );
-
 
 // ================= DELETE =================
 
@@ -155,6 +155,23 @@ router.delete(
   userController.deleteAdminByIdController
 );
 
+// ================= GENERIC (MUST BE LAST) =================
 
+// Get User by ID
+router.get(
+  "/:id",
+  auth(UserRole.ADMIN),
+  userController.getUserByIdController
+);
+
+router.patch(
+    "/update-my-profile",
+    auth( UserRole.ADMIN, UserRole.TOURIST, UserRole.GUIDE),
+    fileUploader.upload.single('file'),
+    (req: Request, res: Response, next: NextFunction) => {
+        req.body = JSON.parse(req.body.data)
+        return userController.updateMyProfie(req, res, next)
+    }
+);
 
 export const userRoutes = router;

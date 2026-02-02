@@ -1,3 +1,4 @@
+import { Result } from './../../../generated/prisma/client/internal/prismaNamespace';
 import httpStatus from "http-status";
 import { fileUploader } from "../../helper/fileUploader";
 import { prisma } from "../../shared/prisma";
@@ -7,22 +8,36 @@ import calculatePagination from "../../helper/paginationHelper";
 import { listingSearchableFields } from "./listing.contsnt";
 import ApiError from "../../errors/ApiError";
 import { openai } from "../../helper/open-Router";
+import { JwtPayload } from 'jsonwebtoken';
 
 const createListing = async (req: Request) => {
   const guideId = req.params.guideId;
   const payload = req.body.data ? JSON.parse(req.body.data) : req.body;
-  const files = req.files as Express.Multer.File[];
-  const uploadImages: string[] = [];
 
-  for (const file of files) {
-    const result: any = await fileUploader.uloadToCloudinary(file);
-    uploadImages.push(result.secure_url);
+
+
+
+  const guideExists = await prisma.guide.findUnique({
+  where: { id: guideId },
+});
+
+if (!guideExists) {
+  throw new ApiError(
+    4565,
+    "Guide not found with this ID"
+  );
+}
+
+
+  let uploadResult
+  if (req.file) {
+ uploadResult = await fileUploader.uloadToCloudinary(req.file);
+    
   }
 
-  console.log(payload);
-  console.log(uploadImages);
 
-  return prisma.listing.create({
+
+ const Result = await prisma.listing.create({
     data: {
       title: payload.title,
       description: payload.description,
@@ -34,7 +49,7 @@ const createListing = async (req: Request) => {
       maxGroupSize: Number(payload.maxGroupSize),
       city: payload.city,
       category: payload.category,
-      images: uploadImages,
+      images:  uploadResult?.secure_url,
       guide: {
         connect: {
           id: guideId,
@@ -55,44 +70,83 @@ const createListing = async (req: Request) => {
       guide: true,
     },
   });
+
+  
+
+  return Result;
 };
 
-const getAllListingsService = async (params: any, options: any) => {
-  const { page, limit, skip, sortBy, sortOrder } = calculatePagination(options);
+const getAllListingsService = async (
+  params: any,
+  options: any,
+  decodedToken: JwtPayload
+) => {
+  const { page, limit, skip, sortBy, sortOrder } =
+    calculatePagination(options);
 
   const { searchTerm, ...filterData } = params;
 
   const andConditions: Prisma.ListingWhereInput[] = [];
 
-  // 🔍 Search
+  /* ------------------------------------------------------------------ */
+  /* 🔐 STEP 1: Find guide by email from token                           */
+  /* ------------------------------------------------------------------ */
+  if (!decodedToken?.email) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid token");
+  }
+
+  const guide = await prisma.guide.findUnique({
+    where: { email: decodedToken.email },
+    select: { id: true },
+  });
+
+  if (!guide) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Guide not found");
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* 🔐 STEP 2: Force guideId filter                                     */
+  /* ------------------------------------------------------------------ */
+  andConditions.push({
+    guideId: guide.id,
+  });
+
+  /* ---------------------------- Search ------------------------------- */
   if (searchTerm) {
     andConditions.push({
       OR: listingSearchableFields.map((field) => ({
-        [field]: { contains: searchTerm, mode: "insensitive" },
+        [field]: {
+          contains: searchTerm,
+          mode: "insensitive",
+        },
       })),
     });
   }
 
-  // 🔎 Exact filters (city, category, guideId, price, etc.)
-  if (Object.keys(filterData).length > 0) {
-    andConditions.push({
-      AND: Object.keys(filterData).map((key) => ({
-        [key]: { equals: filterData[key] },
-      })),
-    });
+  /* ----------------------- Optional Filters -------------------------- */
+  if (filterData.city) {
+    andConditions.push({ city: filterData.city });
   }
 
-  // 📌 Final where condition
-  const whereConditions: Prisma.ListingWhereInput =
-    andConditions.length > 0 ? { AND: andConditions } : {};
+  if (filterData.category) {
+    andConditions.push({ category: filterData.category });
+  }
 
-  // 📌 Query Listings
+  if (filterData.isActive !== undefined) {
+    andConditions.push({ isActive: filterData.isActive });
+  }
+
+  /* ----------------------- Final where ------------------------------- */
+  const whereConditions: Prisma.ListingWhereInput = {
+    AND: andConditions,
+  };
+
+  /* ------------------------ Query ----------------------------------- */
   const listings = await prisma.listing.findMany({
     skip,
     take: limit,
     where: whereConditions,
     orderBy: { [sortBy]: sortOrder },
-
     include: {
       guide: true,
       availabilities: true,
@@ -101,11 +155,12 @@ const getAllListingsService = async (params: any, options: any) => {
     },
   });
 
-  // 📌 Total count
   const total = await prisma.listing.count({
     where: whereConditions,
   });
 
+  console.log("hello from getAllListings",listings);
+  
   return {
     meta: { page, limit, total },
     data: listings,
@@ -178,8 +233,120 @@ Your task:
   }
   return listingData;
 };
+
+const deleteListing = async (listingId: string) => {
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId },
+  });
+
+  if (!listing) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Listing not found");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    // ✅ 1. Delete all availabilities of this listing
+    await tx.availability.deleteMany({
+      where: {
+        listingId: listingId,
+      },
+    });
+
+    // ✅ 2. Delete listing
+    await tx.listing.delete({
+      where: { id: listingId },
+    });
+  });
+
+  return null;
+};
+
+const getAllListingsPublic = async (params: any, options: any) => {
+  const { page, limit, skip, sortBy, sortOrder } =
+    calculatePagination(options);
+
+  const { searchTerm, ...filterData } = params;
+
+  const andConditions: Prisma.ListingWhereInput[] = [];
+
+  // Only show active listings for public
+  andConditions.push({
+    isActive: true,
+  });
+
+  /* ---------------------------- Search ------------------------------- */
+  if (searchTerm) {
+    andConditions.push({
+      OR: listingSearchableFields.map((field) => ({
+        [field]: {
+          contains: searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  /* ----------------------- Optional Filters -------------------------- */
+  if (filterData.city) {
+    andConditions.push({ city: filterData.city });
+  }
+
+  if (filterData.category) {
+    andConditions.push({ category: filterData.category });
+  }
+
+  /* ----------------------- Final where ------------------------------- */
+  const whereConditions: Prisma.ListingWhereInput = {
+    AND: andConditions,
+  };
+
+  /* ------------------------ Query ----------------------------------- */
+  const listings = await prisma.listing.findMany({
+    skip,
+    take: limit,
+    where: whereConditions,
+    orderBy: { [sortBy]: sortOrder },
+    include: {
+      guide: true,
+      availabilities: true,
+      reviews: true,
+      bookings: true,
+    },
+  });
+
+  const total = await prisma.listing.count({
+    where: whereConditions,
+  });
+
+  return {
+    meta: { page, limit, total },
+    data: listings,
+  };
+};
+
+const getListingById = async (listingId: string) => {
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId, isActive: true },
+    include: {
+      guide: true,
+      availabilities: true,
+      reviews: true,
+      bookings: true,
+    },
+  });
+
+  if (!listing) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Listing not found");
+  }
+
+  return listing;
+};
+
+
 export const listingService = {
   createListing,
   getAllListingsService,
   getlistingSuggestion,
+  deleteListing,
+  getAllListingsPublic,
+  getListingById
 };
