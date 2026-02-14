@@ -5,3 +5,17 @@ dist
 
 /src/generated/prisma
 /generated/prisma
+
+
+
+# .env
+# /generated/prisma
+# .vercel
+
+# dist/
+# .env
+# .env.local
+# uploads/*
+# !uploads/.gitkeep
+# *.log
+

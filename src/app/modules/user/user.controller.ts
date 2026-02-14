@@ -1,4 +1,4 @@
-import  httpStatus  from 'http-status';
+import httpStatus from 'http-status';
 import { pick } from "../../helper/pick";
 import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
@@ -107,12 +107,12 @@ const getUserByIdController = catchAsync(async (req, res) => {
 
 // Get all admins
 const getAllAdminsController = catchAsync(async (req, res) => {
- const filters = pick(req.query, [
+  const filters = pick(req.query, [
     "searchTerm",
     "email",
     "contactNumber",
     "isDeleted",
-   
+
   ]);
 
   const options = pick(req.query, [
@@ -122,7 +122,7 @@ const getAllAdminsController = catchAsync(async (req, res) => {
     "sortOrder",
   ]);
   const result = await userService.getAllAdminsService(filters, options);
-  
+
 
   sendResponse(res, {
     statusCode: 200,
@@ -136,7 +136,7 @@ const getAllAdminsController = catchAsync(async (req, res) => {
 // Get all guides
 const getAllGuidesController = catchAsync(async (req, res) => {
 
-  
+
 
   const filters = pick(req.query, [
     "searchTerm",
@@ -165,7 +165,7 @@ const getAllGuidesController = catchAsync(async (req, res) => {
 // Get all tourists
 const getAllTouristsController = catchAsync(async (req, res) => {
 
-const filters = pick(req.query, [
+  const filters = pick(req.query, [
     "searchTerm",
     "email",
     "contactNumber",
@@ -248,7 +248,7 @@ const deleteTouristByIdController = catchAsync(async (req, res) => {
 // Delete Guide
 const deleteGuideByIdController = catchAsync(async (req, res) => {
   const { id } = req.params;
-  console.log(`deleteGuideByIdController`,id);
+  console.log(`deleteGuideByIdController`, id);
 
   const result = await userService.deleteGuideByIdService(id);
 
@@ -274,19 +274,24 @@ const deleteAdminByIdController = catchAsync(async (req, res) => {
   });
 });
 
-const updateMyProfie = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
+const updateMyProfie = catchAsync(async (req, res) => {
 
-    const user = req.user;
+  const user = req.user;
 
-    const result = await userService.updateMyProfileService(user as IAuthUser, req);
+  const result = await userService.updateMyProfileService(user, req);
 
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "My profile updated!",
-        data: result
-    })
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "My profile updated!",
+    data: result
+  })
 });
+
+
+
+
+
 
 export const userController = {
   ctreateGuideController,
