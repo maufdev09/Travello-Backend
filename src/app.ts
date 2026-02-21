@@ -7,10 +7,23 @@ import router from './app/routes';
 import cookieParser from 'cookie-parser'
 
 const app: Application = express();
-app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials: true
-}));
+const allowedOrigins = [config.frontend_url, "http://localhost:3000"].filter(
+  Boolean
+) as string[];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
 
 
 //parser
