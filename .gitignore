@@ -10,12 +10,12 @@ dist
 
 # .env
 # /generated/prisma
-# .vercel
+.vercel
 
 # dist/
 # .env
 # .env.local
-# uploads/*
-# !uploads/.gitkeep
-# *.log
+uploads/*
+!uploads/.gitkeep
+*.log
 
