@@ -18,26 +18,26 @@ const createListing = async (req: Request) => {
 
 
   const guideExists = await prisma.guide.findUnique({
-  where: { id: guideId },
-});
+    where: { id: guideId },
+  });
 
-if (!guideExists) {
-  throw new ApiError(
-    4565,
-    "Guide not found with this ID"
-  );
-}
+  if (!guideExists) {
+    throw new ApiError(
+      4565,
+      "Guide not found with this ID"
+    );
+  }
 
 
   let uploadResult
   if (req.file) {
- uploadResult = await fileUploader.uloadToCloudinary(req.file);
-    
+    uploadResult = await fileUploader.uloadToCloudinary(req.file);
+
   }
 
 
 
- const Result = await prisma.listing.create({
+  const Result = await prisma.listing.create({
     data: {
       title: payload.title,
       description: payload.description,
@@ -49,7 +49,7 @@ if (!guideExists) {
       maxGroupSize: Number(payload.maxGroupSize),
       city: payload.city,
       category: payload.category,
-      images:  uploadResult?.secure_url,
+      images: uploadResult?.secure_url,
       guide: {
         connect: {
           id: guideId,
@@ -60,7 +60,7 @@ if (!guideExists) {
           startAt: new Date(slot.startAt),
           endAt: new Date(slot.endAt),
           note: slot.note || null,
-          guide: { connect: { id: guideId } },  
+          guide: { connect: { id: guideId } },
 
         })),
       },
@@ -71,7 +71,7 @@ if (!guideExists) {
     },
   });
 
-  
+
 
   return Result;
 };
@@ -159,8 +159,8 @@ const getAllListingsService = async (
     where: whereConditions,
   });
 
-  console.log("hello from getAllListings",listings);
-  
+  console.log("hello from getAllListings", listings);
+
   return {
     meta: { page, limit, total },
     data: listings,
@@ -198,39 +198,50 @@ Your task:
 4. Return ONLY valid JSON in this format with full listing details
 `;
 
-  const completion = await openai.chat.completions.create({
-    model: "z-ai/glm-4.5-air:free",
-    messages: [
-      {
-        role: "system",
-        content: `You are a helpful assistant that helps users find suitable tour listings based on their preferences.`,
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-  });
+  let completion: any;
+  try {
+    completion = await openai.chat.completions.create({
+      model: "z-ai/glm-4.5-air:free",
+      messages: [
+        {
+          role: "system",
+          content: `You are a helpful assistant that helps users find suitable tour listings based on their preferences.`,
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    });
+  } catch (err: any) {
+    console.error("OpenAI request failed:", err);
+    const msg = err?.response?.data?.error?.message || err?.message || "AI service error";
+    const status = err?.status || httpStatus.INTERNAL_SERVER_ERROR;
+    throw new ApiError(status, msg);
+  }
 
-  const rawContent = completion.choices[0].message.content;
+  const rawContent = completion?.choices?.[0]?.message?.content;
 
   if (!rawContent) {
+    console.error("Empty AI response:", completion);
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "No response from AI");
   }
 
   // Remove code block formatting (```json ... ```)
   const cleaned = rawContent
-    .replace(/^```json/, "")
-    .replace(/```$/, "")
+    .replace(/^```json\s*/i, "")
+    .replace(/```\s*$/i, "")
     .trim();
 
   // Convert string → JSON object
-  let listingData;
+  let listingData: any = null;
   try {
     listingData = JSON.parse(cleaned);
   } catch (e) {
-    console.error("JSON parse error:", e);
+    console.error("JSON parse error:", e, "rawContent:", rawContent, "cleaned:", cleaned);
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Failed to parse AI response as JSON");
   }
+
   return listingData;
 };
 

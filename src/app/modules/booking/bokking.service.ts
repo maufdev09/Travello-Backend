@@ -8,14 +8,12 @@ import { sslCommerzService } from "../sslCommerz/sslCommerz.service";
 
 const createBooking = async (payload: any) => {
 
-if (!payload.bookingDateId) {
-  throw new ApiError(
-    httpStatus.BAD_REQUEST,
-    "bookingDateId is required to create a booking."
-  );
-}
-
-
+  if (!payload.bookingDateId) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "bookingDateId is required to create a booking."
+    );
+  }
   const result = await prisma.$transaction(async (tnx) => {
     const existingBooking = await tnx.booking.findUnique({
       where: {
@@ -36,12 +34,17 @@ if (!payload.bookingDateId) {
         totalPrice: payload.totalPrice,
         currency: payload.currency,
         listing: { connect: { id: payload.listingId } },
-        tourist: { connect: { id: payload.touristId } },
+        // tourist: { connect: { id: payload.touristId } },
+        user: { connect: { id: payload.userId } }, // ✅ Correct
         guide: { connect: { id: payload.guideId } },
         bookingDate: { connect: { id: payload.bookingDateId } },
       },
       include: {
-        tourist: true, // 👈 Populate tourist
+        user: {
+          include: {
+            tourist: true, // 🔥 IMPORTANT
+          },
+        },// optional
         guide: true, // optional
         listing: true, // optional
         bookingDate: true, // optional
@@ -55,6 +58,9 @@ if (!payload.bookingDateId) {
     //   },
     // });
 
+
+
+
     const transactionId = uuidv4();
 
     await tnx.payment.create({
@@ -67,20 +73,21 @@ if (!payload.bookingDateId) {
       },
     });
 
+
     const sslPayload: ISSLCommerz = {
-      email: bookingData.tourist?.email || "",
-      phoneNumber: bookingData?.tourist?.contactNumber || "",
-      name: bookingData.tourist?.name || "",
+      email: bookingData.user?.email || "",
+      phoneNumber: bookingData.user.tourist?.contactNumber || "",
+      name: bookingData.user.tourist?.name || "",
       amount: bookingData.totalPrice,
       transactionId: transactionId,
       bookingDateId: payload.bookingDateId,
     };
 
-    console.log("sslPayload", sslPayload);
-    
+
 
     const sslResponse = await sslCommerzService.sslPaymentInit(sslPayload);
 
+    console.log("SSLCommerz Response:", sslResponse);
     return {
       payment: sslResponse.GatewayPageURL,
       booking: bookingData,

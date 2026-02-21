@@ -7,10 +7,12 @@ model User {
   status             UserStatus @default(ACTIVE)
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
+  bookings Booking[] @relation("TouristBookings")
 
 admin   Admin?
 guide   Guide?
 tourist Tourist?
+
 
 
   @@map("users")
@@ -73,7 +75,6 @@ model Tourist {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  bookings Booking[] @relation("TouristBookings")
   reviews  Review[]
 
   user User @relation(fields: [email], references: [email])

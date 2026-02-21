@@ -11,8 +11,9 @@ model Booking {
   listing   Listing @relation(fields: [listingId], references: [id])
   listingId String
 
-  tourist   Tourist @relation("TouristBookings", fields: [touristId], references: [id])
-  touristId String
+user   User @relation("TouristBookings", fields: [userId], references: [id])
+userId String
+
 
   guide   Guide  @relation("GuideBookings", fields: [guideId], references: [id])
   guideId String

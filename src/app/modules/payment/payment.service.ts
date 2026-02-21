@@ -7,13 +7,14 @@ import ApiError from "../../errors/ApiError";
 import { prisma } from "../../shared/prisma";
 import { sslCommerzService } from "../sslCommerz/sslCommerz.service";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
+import { tr } from "zod/v4/locales";
 
 const initPayment = async (bookingId: string) => {
   const bookingData = await prisma.booking.findUnique({
     where: { id: bookingId },
 
     include: {
-      tourist: true, // 👈 Populate tourist
+      user: true, // 👈 Populate user
       guide: true, // optional
       listing: true, // optional
       bookingDate: true, // optional
@@ -45,9 +46,9 @@ const initPayment = async (bookingId: string) => {
 
   const result = await prisma.$transaction(async (tnx) => {
     const sslPayload: ISSLCommerz = {
-      email: bookingData.tourist?.email || "",
-      phoneNumber: bookingData?.tourist?.contactNumber || "",
-      name: bookingData.tourist?.name || "",
+      email: bookingData.user?.email || "",
+      phoneNumber: bookingData?.user?.contactNumber || "",
+      name: bookingData.user?.name || "",
       amount: bookingData.totalPrice,
       transactionId: PaymentData.transactionId ?? undefined,
       bookingDateId: bookingData.bookingDateId,
@@ -57,7 +58,7 @@ const initPayment = async (bookingId: string) => {
 
     const sslResponse = await sslCommerzService.sslPaymentInit(sslPayload);
 
-     return {
+    return {
       payment: sslResponse.GatewayPageURL,
       booking: bookingData,
     };
