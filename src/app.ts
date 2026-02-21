@@ -7,14 +7,15 @@ import router from './app/routes';
 import cookieParser from 'cookie-parser'
 
 const app: Application = express();
-const allowedOrigins = [config.frontend_url, "http://localhost:3000"].filter(
-  Boolean
-) as string[];
+const normalizeOrigin = (value: string) => value.replace(/\/+$/, "");
+const allowedOrigins = [config.frontend_url, "http://localhost:3000"]
+  .filter(Boolean)
+  .map((origin) => normalizeOrigin(origin as string));
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(normalizeOrigin(origin))) {
         callback(null, true);
         return;
       }

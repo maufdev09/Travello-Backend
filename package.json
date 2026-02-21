@@ -8,7 +8,8 @@
     "start": "node dist/src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only ./src/server.ts",
-    "postinstall": "prisma generate --schema=./prisma/schema"
+    "postinstall": "prisma generate --schema=./prisma/schema",
+    "seed:admin": "pnpm run build && node dist/src/scripts/seedAdmin.js"
   },
   "keywords": [],
   "author": "",
